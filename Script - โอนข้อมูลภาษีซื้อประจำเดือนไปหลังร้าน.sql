@@ -54,7 +54,7 @@ GO
 
 select docno  into tempdb.dbo.invat 
 from nebula.bcnp.dbo.bcinputtax 
-where year(taxdate)=2015 and month(taxdate)=7
+where year(taxdate)=2016 and month(taxdate)=1
 and docno not like '%IS%'
 and docno not like '%IR%'
 and docno not like '%CNC%'
