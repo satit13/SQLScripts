@@ -1,3 +1,26 @@
+-- ตรวจสอบเช็คจ่าย F7 vs GL 
+select * , isnull(a.payamount,0) - isnull(cd,0) as diff from 
+(
+	select sum(payamount) as payamount ,docno  ,docdate
+	from BCPayMoney 
+		where PaymentType = 2 and YEAR(docdate) in (2012,2013,2014)
+		group by docno ,docdate
+) A Full outer join 	
+(	
+	select DocNo,SUM(debit) as db ,SUM(credit) as cd  from BCTransSub 
+	where Source not  in (0) and  Credit <> 0 and  YEAR(docdate) in (2012,2013,2014) and 
+		accountcode in 
+		(select accountcode 
+			from nebula.npmaster.dbo.TB_GL_ReconcileAccount 
+			where reconcilemodule='APCQ1001'
+			)
+	group by docno
+) B on a.DocNo = b.DocNo 	
+where ISNULL(a.docno,'') <> ISNULL(b.DocNo,'') or a.payamount <> b.cd
+
+
+-------------------------------------------------------------------------
+-- ตรวจสอบ F7 vs ทะเบียนเช็ค 
 select * from 
 (
 	select b.* , a.*
@@ -23,22 +46,3 @@ select * from
 				
 
 
--- 
-select * , isnull(a.payamount,0) - isnull(cd,0) as diff from 
-(
-	select sum(payamount) as payamount ,docno  ,docdate
-	from BCPayMoney 
-		where PaymentType = 2 and YEAR(docdate) in (2012,2013,2014)
-		group by docno ,docdate
-) A Full outer join 	
-(	
-	select DocNo,SUM(debit) as db ,SUM(credit) as cd  from BCTransSub 
-	where Source not  in (0) and  Credit <> 0 and  YEAR(docdate) in (2012,2013,2014) and 
-		accountcode in 
-		(select accountcode 
-			from nebula.npmaster.dbo.TB_GL_ReconcileAccount 
-			where reconcilemodule='APCQ1001'
-			)
-	group by docno
-) B on a.DocNo = b.DocNo 	
-where ISNULL(a.docno,'') <> ISNULL(b.DocNo,'') or a.payamount <> b.cd
